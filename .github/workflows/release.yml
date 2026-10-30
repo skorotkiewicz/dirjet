@@ -1,0 +1,93 @@
+name: Release packages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    env:
+      CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER: musl-gcc
+      CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: musl-gcc
+      CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_RUSTFLAGS: -C target-feature=+crt-static
+      CARGO_TARGET_AARCH64_PC_WINDOWS_MSVC_RUSTFLAGS: -C target-feature=+crt-static
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x64
+            runner: ubuntu-24.04
+            target: x86_64-unknown-linux-musl
+            binary: serve-rs
+          - platform: linux-arm64
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+            binary: serve-rs
+          - platform: darwin-x64
+            runner: macos-15-intel
+            target: x86_64-apple-darwin
+            binary: serve-rs
+          - platform: darwin-arm64
+            runner: macos-15
+            target: aarch64-apple-darwin
+            binary: serve-rs
+          - platform: win32-x64
+            runner: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary: serve-rs.exe
+          - platform: win32-arm64
+            runner: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            binary: serve-rs.exe
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: oven-sh/setup-bun@v2
+      - name: Install musl tools
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - run: bun run test
+      - name: Build release binary
+        run: cargo build --release --locked --target ${{ matrix.target }}
+      - name: Smoke test release binary
+        shell: bash
+        run: ./target/${{ matrix.target }}/release/${{ matrix.binary }} --version
+      - name: Stage npm packages
+        run: bun scripts/package.mjs --platform ${{ matrix.platform }} --binary target/${{ matrix.target }}/release/${{ matrix.binary }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-${{ matrix.platform }}
+          path: dist/npm/
+          if-no-files-found: error
+  assemble:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: npm-*
+          path: dist/npm/
+          merge-multiple: true
+      - name: Check complete release
+        run: bun scripts/verify-release.mjs dist/npm
+      - name: Restore executable permissions
+        run: chmod +x dist/npm/serve-rs/bin/serve-rs.cjs dist/npm/serve-rs-*/bin/*
+      - name: Pack release tarballs
+        shell: bash
+        run: |
+          mkdir -p dist/tarballs
+          for package in dist/npm/*; do
+            bun pm pack --cwd "$package" --destination "$GITHUB_WORKSPACE/dist/tarballs"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-packages
+          path: dist/
+          if-no-files-found: error

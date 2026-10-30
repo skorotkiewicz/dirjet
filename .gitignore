@@ -1,0 +1,8 @@
+# Local npm installs
+node_modules
+dist
+*.tgz
+.env
+.env.*
+.DS_Store
+/target

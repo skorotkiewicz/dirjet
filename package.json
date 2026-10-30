@@ -1,0 +1,28 @@
+{
+  "name": "serve-rs",
+  "version": "0.1.0",
+  "description": "Serve directories and individual files with a Rust static file server",
+  "license": "MIT",
+  "bin": {
+    "serve-rs": "bin/serve-rs.cjs"
+  },
+  "files": ["bin", "README.md", "LICENSE"],
+  "engines": { "node": ">=18" },
+  "keywords": ["serve", "static", "server", "rust", "bun"],
+  "scripts": {
+    "dev": "cargo run --",
+    "build": "cargo build --release --locked",
+    "test": "cargo test --locked && bun test",
+    "check": "cargo fmt --check && cargo clippy --locked --all-targets -- -D warnings",
+    "package": "cargo build --release --locked && bun scripts/package.mjs",
+    "prepublishOnly": "bun scripts/verify-release.mjs dist/npm"
+  },
+  "optionalDependencies": {
+    "serve-rs-darwin-arm64": "0.1.0",
+    "serve-rs-darwin-x64": "0.1.0",
+    "serve-rs-linux-arm64": "0.1.0",
+    "serve-rs-linux-x64": "0.1.0",
+    "serve-rs-win32-arm64": "0.1.0",
+    "serve-rs-win32-x64": "0.1.0"
+  }
+}

@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const platform = `${process.platform}-${process.arch}`;
-const binaryName = process.platform === "win32" ? "serve-rs.exe" : "serve-rs";
+const binaryName = process.platform === "win32" ? "djet.exe" : "djet";
 const manifest = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
 let temporary;
 let launcher;
@@ -17,7 +17,7 @@ let downloads = 0;
 let downloadsEnabled = true;
 
 function launcherEnv(cache = cacheDirectory) {
-  return { ...process.env, SERVE_RS_CACHE_DIR: cache };
+  return { ...process.env, DJET_CACHE_DIR: cache };
 }
 
 async function command(args, options = {}) {
@@ -34,7 +34,7 @@ async function command(args, options = {}) {
 }
 
 beforeAll(async () => {
-  temporary = await mkdtemp(join(tmpdir(), "serve-rs-test-"));
+  temporary = await mkdtemp(join(tmpdir(), "djet-test-"));
   cacheDirectory = join(temporary, "cache");
   await command(["cargo", "build", "--locked"]);
   const staging = join(temporary, "staging");
@@ -42,7 +42,7 @@ beforeAll(async () => {
     process.execPath, "scripts/package.mjs", "--binary", join(root, "target/debug", binaryName),
     "--out", staging, "--local",
   ]);
-  const mainPackage = join(staging, "npm/serve-rs");
+  const mainPackage = join(staging, "npm/djet");
   const binaryManifestPath = join(mainPackage, "bin/binaries.json");
   const binaryManifest = JSON.parse(await readFile(binaryManifestPath, "utf8"));
   binaryServer = Bun.serve({
@@ -64,16 +64,16 @@ beforeAll(async () => {
   await mkdir(tarballs);
   const installation = join(temporary, "installation/node_modules");
   await mkdir(installation, { recursive: true });
-  for (const name of ["serve-rs"]) {
+  for (const name of ["djet"]) {
     await command([process.execPath, "pm", "pack", "--destination", tarballs], { cwd: mainPackage });
     const destination = join(installation, name);
     await mkdir(destination);
     await command(["tar", "-xzf", join(tarballs, `${name}-${manifest.version}.tgz`), "-C", destination, "--strip-components=1"]);
   }
-  launcher = join(installation, "serve-rs/bin/serve-rs.cjs");
+  launcher = join(installation, "djet/bin/djet.cjs");
   if (process.platform !== "win32") {
     await mkdir(join(installation, ".bin"));
-    await symlink(launcher, join(installation, ".bin/serve-rs"));
+    await symlink(launcher, join(installation, ".bin/djet"));
   }
   site = join(temporary, "site with spaces");
   await mkdir(site);
@@ -137,10 +137,10 @@ const cliCommandTimeout = 20_000;
 
 test("staged npm launcher runs with Bun", async () => {
   expect((await command([process.execPath, launcher, "--version"], { timeout: cliCommandTimeout })).trim())
-    .toBe(`serve-rs ${manifest.version}`);
+    .toBe(`djet ${manifest.version}`);
   expect(downloads).toBe(1);
   expect((await command([process.execPath, launcher, "--version"], { timeout: cliCommandTimeout })).trim())
-    .toBe(`serve-rs ${manifest.version}`);
+    .toBe(`djet ${manifest.version}`);
   expect(downloads).toBe(1);
 }, cliTestTimeout);
 
@@ -149,7 +149,7 @@ test.skipIf(!Bun.which("node"))("staged npm launcher runs with Node", async () =
   expect((await command(["node", launcher, "--version"], {
     timeout: cliCommandTimeout, env: launcherEnv(join(temporary, "node-cache")),
   })).trim())
-    .toBe(`serve-rs ${manifest.version}`);
+    .toBe(`djet ${manifest.version}`);
   expect(downloads).toBe(before + 1);
 }, cliTestTimeout);
 
@@ -192,12 +192,12 @@ test("directory npm command lists files and serves HTML", async () => {
 
 test("one packed npm package contains the launcher and pinned checksums without native dependencies", async () => {
   const staging = join(temporary, "staging/npm");
-  const manifest = JSON.parse(await readFile(join(staging, "serve-rs/package.json"), "utf8"));
+  const manifest = JSON.parse(await readFile(join(staging, "djet/package.json"), "utf8"));
   expect(manifest.scripts).toBeUndefined();
   expect(manifest.optionalDependencies).toBeUndefined();
-  expect((await readdir(join(staging, "serve-rs/bin"))).sort())
-    .toEqual(["binaries.json", "binary.cjs", "serve-rs.cjs"]);
-  const binaries = JSON.parse(await readFile(join(staging, "serve-rs/bin/binaries.json"), "utf8"));
+  expect((await readdir(join(staging, "djet/bin"))).sort())
+    .toEqual(["binaries.json", "binary.cjs", "djet.cjs"]);
+  const binaries = JSON.parse(await readFile(join(staging, "djet/bin/binaries.json"), "utf8"));
   expect(binaries.version).toBe(manifest.version);
   expect(binaries.binaries[platform].sha256).toMatch(/^[a-f0-9]{64}$/);
 });
@@ -217,9 +217,9 @@ test("an unavailable first download fails clearly without installing a binary", 
 
 test.skipIf(process.platform === "win32")("bunx finds the installed CLI", async () => {
   const cwd = join(temporary, "installation");
-  const args = [process.execPath, "x", "--no-install", "--bun", "serve-rs", "--version"];
-  expect((await command(args, { cwd })).trim()).toBe(`serve-rs ${manifest.version}`);
+  const args = [process.execPath, "x", "--no-install", "--bun", "djet", "--version"];
+  expect((await command(args, { cwd })).trim()).toBe(`djet ${manifest.version}`);
   if (Bun.which("node")) {
-    expect((await command([process.execPath, "x", "--no-install", "serve-rs", "--version"], { cwd })).trim()).toBe(`serve-rs ${manifest.version}`);
+    expect((await command([process.execPath, "x", "--no-install", "djet", "--version"], { cwd })).trim()).toBe(`djet ${manifest.version}`);
   }
 });

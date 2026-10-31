@@ -1,5 +1,5 @@
 {
-  "name": "serve-rs",
+  "name": "djet",
   "version": "0.1.1",
   "description": "Serve directories and individual files with a Rust static file server",
   "license": "MIT",
@@ -9,7 +9,7 @@
   },
   "bugs": "https://github.com/skorotkiewicz/serve-rs/issues",
   "bin": {
-    "serve-rs": "bin/serve-rs.cjs"
+    "djet": "bin/djet.cjs"
   },
   "files": ["bin", "README.md", "LICENSE"],
   "engines": { "node": ">=18" },

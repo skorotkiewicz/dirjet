@@ -24,7 +24,7 @@ fn fixture() -> TempDir {
 }
 
 async fn router(path: &Path, flags: &[&str]) -> Router {
-    let mut cli = Cli::try_parse_from(std::iter::once("serve-rs").chain(flags.iter().copied()))
+    let mut cli = Cli::try_parse_from(std::iter::once("djet").chain(flags.iter().copied()))
         .expect("fixture arguments should be valid");
     cli.path = path.to_owned();
     Server::new(&cli)
@@ -276,7 +276,7 @@ async fn methods_other_than_get_and_head_are_rejected() {
 #[tokio::test]
 async fn invalid_roots_and_missing_spa_entries_fail_at_startup() {
     let directory = tempdir().expect("temporary directory");
-    let mut cli = Cli::try_parse_from(["serve-rs", "--single"]).expect("valid arguments");
+    let mut cli = Cli::try_parse_from(["djet", "--single"]).expect("valid arguments");
     cli.path = directory.path().to_owned();
     assert!(Server::new(&cli).await.is_err(), "SPA needs an entry file");
     cli.single = false;
@@ -345,12 +345,12 @@ async fn symlinks_cannot_expose_outside_or_hidden_files() {
 
 #[test]
 fn cli_accepts_serve_style_listen_and_validates_ports() {
-    let cli = Cli::try_parse_from(["serve-rs", "example.html", "-l", "8080", "-s"])
-        .expect("valid arguments");
+    let cli =
+        Cli::try_parse_from(["djet", "example.html", "-l", "8080", "-s"]).expect("valid arguments");
     assert_eq!(cli.port, 8080);
     assert!(cli.single, "-s enables fallback");
     assert!(
-        Cli::try_parse_from(["serve-rs", "--port", "65536"]).is_err(),
+        Cli::try_parse_from(["djet", "--port", "65536"]).is_err(),
         "port must fit u16"
     );
 }

@@ -16,7 +16,7 @@ afterEach(async () => {
 });
 
 async function fixture(names, local = false) {
-  const directory = await mkdtemp(join(tmpdir(), "serve-rs-release-"));
+  const directory = await mkdtemp(join(tmpdir(), "djet-release-"));
   temporary.push(directory);
   const binary = join(directory, "fixture.bin");
   await writeFile(binary, "native binary fixture");
@@ -52,8 +52,8 @@ test("complete release contains one npm package with all six pinned checksums", 
   const result = await verify(directory);
   expect(result.code).toBe(0);
   expect(result.stdout).toContain("all 6 verified native binaries");
-  expect(await readdir(join(directory, "npm"))).toEqual(["serve-rs"]);
-  const manifest = JSON.parse(await readFile(join(directory, "npm/serve-rs/bin/binaries.json"), "utf8"));
+  expect(await readdir(join(directory, "npm"))).toEqual(["djet"]);
+  const manifest = JSON.parse(await readFile(join(directory, "npm/djet/bin/binaries.json"), "utf8"));
   expect(manifest.baseUrl).toBe("https://github.com/skorotkiewicz/serve-rs/releases/download/v" + source.version);
   expect(Object.keys(manifest.binaries).sort()).toEqual(Object.keys(platforms).sort());
 });
@@ -71,7 +71,7 @@ test("binary metadata from a different version is rejected", async () => {
 
 test("modified native bytes fail verification", async () => {
   const directory = await fixture(Object.keys(platforms));
-  await writeFile(join(directory, "native/serve-rs-linux-x64"), "tampered binary");
+  await writeFile(join(directory, "native/djet-linux-x64"), "tampered binary");
   const result = await verify(directory);
   expect(result.code).toBe(1);
   expect(result.stderr).toContain("Invalid binary metadata or checksum");
@@ -79,7 +79,7 @@ test("modified native bytes fail verification", async () => {
 
 test("npm checksums must match the binaries that will be uploaded to GitHub", async () => {
   const directory = await fixture(Object.keys(platforms));
-  const path = join(directory, "npm/serve-rs/bin/binaries.json");
+  const path = join(directory, "npm/djet/bin/binaries.json");
   const manifest = JSON.parse(await readFile(path, "utf8"));
   manifest.binaries["linux-x64"].sha256 = "0".repeat(64);
   await writeFile(path, JSON.stringify(manifest));

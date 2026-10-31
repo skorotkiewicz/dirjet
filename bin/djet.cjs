@@ -12,7 +12,7 @@ const supported = new Set([
   "win32-arm64", "win32-x64",
 ]);
 const platform = `${process.platform}-${process.arch}`;
-const binaryName = process.platform === "win32" ? "serve-rs.exe" : "serve-rs";
+const binaryName = process.platform === "win32" ? "djet.exe" : "djet";
 
 async function binaryPath() {
   if (!supported.has(platform)) {
@@ -29,7 +29,7 @@ async function binaryPath() {
   return getBinary({
     manifest: require("./binaries.json"),
     version: require("../package.json").version,
-    log: (message) => console.error("serve-rs: " + message),
+    log: (message) => console.error("djet: " + message),
   });
 }
 
@@ -46,7 +46,7 @@ async function main() {
   }
   child.on("error", (error) => {
     cleanup();
-    console.error(`serve-rs: ${error.message}`);
+    console.error(`djet: ${error.message}`);
     process.exitCode = 1;
   });
   child.on("exit", (code, signal) => {
@@ -56,6 +56,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(`serve-rs: ${error.message}`);
+  console.error(`djet: ${error.message}`);
   process.exitCode = 1;
 });

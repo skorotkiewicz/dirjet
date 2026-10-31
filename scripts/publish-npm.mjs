@@ -58,7 +58,7 @@ export async function publishNpm(directory, { fetchImpl = fetch, run = runNpm, l
 
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
   await publishNpm(process.argv[2] ?? join("dist", "tarballs"), { checkOnly: process.argv.includes("--check") }).catch((error) => {
-    console.error("serve-rs: " + error.message);
+    console.error("djet: " + error.message);
     process.exitCode = 1;
   });
 }

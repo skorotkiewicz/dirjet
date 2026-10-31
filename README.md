@@ -102,7 +102,7 @@ After the package exists, configure an npm trusted publisher for this repository
 ### Release from GitHub Actions
 
 1. Keep the version in `Cargo.toml`, `Cargo.lock`, and `package.json` in sync. Commit and push the release changes.
-2. Open [Release packages](https://github.com/skorotkiewicz/serve-rs/actions/workflows/release.yml), select the release branch or tag, and choose **Run workflow** with publishing enabled.
+2. Open [Release packages](https://github.com/skorotkiewicz/djet/actions/workflows/release.yml), select the release branch or tag, and choose **Run workflow** with publishing enabled.
 3. The workflow tests and builds Linux, macOS, and Windows on x64 and ARM64. It verifies every executable and embeds their checksums in the npm package.
 4. The workflow checks that an existing npm version matches the staged archive before changing GitHub assets. It then publishes the GitHub release and its binaries, followed by the single `djet` npm package. This order makes the download URLs available before users install the launcher.
 5. Verify with `bunx djet --version` and `bunx djet docs/`.

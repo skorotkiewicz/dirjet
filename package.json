@@ -5,9 +5,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/skorotkiewicz/serve-rs.git"
+    "url": "git+https://github.com/skorotkiewicz/djet.git"
   },
-  "bugs": "https://github.com/skorotkiewicz/serve-rs/issues",
+  "bugs": "https://github.com/skorotkiewicz/djet/issues",
   "bin": {
     "djet": "bin/djet.cjs"
   },

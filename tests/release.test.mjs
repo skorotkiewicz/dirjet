@@ -54,7 +54,7 @@ test("complete release contains one npm package with all six pinned checksums", 
   expect(result.stdout).toContain("all 6 verified native binaries");
   expect(await readdir(join(directory, "npm"))).toEqual(["djet"]);
   const manifest = JSON.parse(await readFile(join(directory, "npm/djet/bin/binaries.json"), "utf8"));
-  expect(manifest.baseUrl).toBe("https://github.com/skorotkiewicz/serve-rs/releases/download/v" + source.version);
+  expect(manifest.baseUrl).toBe("https://github.com/skorotkiewicz/djet/releases/download/v" + source.version);
   expect(Object.keys(manifest.binaries).sort()).toEqual(Object.keys(platforms).sort());
 });
 

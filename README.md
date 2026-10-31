@@ -1,5 +1,10 @@
 # dirjet
 
+[![npm version](https://img.shields.io/npm/v/dirjet)](https://www.npmjs.com/package/dirjet)
+[![CI](https://github.com/skorotkiewicz/dirjet/actions/workflows/ci.yml/badge.svg)](https://github.com/skorotkiewicz/dirjet/actions/workflows/ci.yml)
+[![Built with Rust](https://img.shields.io/badge/built_with-Rust-b7410e)](https://github.com/skorotkiewicz/dirjet/blob/main/Cargo.toml)
+[![MIT license](https://img.shields.io/badge/license-MIT-blue)](https://github.com/skorotkiewicz/dirjet/blob/main/LICENSE)
+
 A Rust static file server for directories and individual files.
 
 Run it with `npx` or `bunx`. No configuration file or Rust toolchain required.

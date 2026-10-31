@@ -5,6 +5,7 @@ const { spawn } = require("node:child_process");
 const { existsSync } = require("node:fs");
 const { join } = require("node:path");
 const { constants } = require("node:os");
+const { getBinary } = require("./binary.cjs");
 
 const supported = new Set([
   "darwin-arm64", "darwin-x64", "linux-arm64", "linux-x64",
@@ -13,30 +14,27 @@ const supported = new Set([
 const platform = `${process.platform}-${process.arch}`;
 const binaryName = process.platform === "win32" ? "serve-rs.exe" : "serve-rs";
 
-function binaryPath() {
+async function binaryPath() {
   if (!supported.has(platform)) {
     throw new Error(`Unsupported platform: ${platform}. Build from source with cargo build --release.`);
   }
-  try {
-    return require.resolve(`serve-rs-${platform}/bin/${binaryName}`);
-  } catch {
-    // Only source checkouts have Cargo.toml. Published packages require the native dependency.
-    const root = join(__dirname, "..");
-    if (existsSync(join(root, "Cargo.toml"))) {
-      for (const profile of ["release", "debug"]) {
-        const candidate = join(root, "target", profile, binaryName);
-        if (existsSync(candidate)) return candidate;
-      }
+  const root = join(__dirname, "..");
+  if (existsSync(join(root, "Cargo.toml"))) {
+    for (const profile of ["release", "debug"]) {
+      const candidate = join(root, "target", profile, binaryName);
+      if (existsSync(candidate)) return candidate;
     }
-    throw new Error(
-      `Missing serve-rs-${platform}. Reinstall serve-rs with optional dependencies enabled. ` +
-      "For a source checkout, run cargo build --release first.",
-    );
+    throw new Error("Run cargo build --release before using the source checkout's launcher.");
   }
+  return getBinary({
+    manifest: require("./binaries.json"),
+    version: require("../package.json").version,
+    log: (message) => console.error("serve-rs: " + message),
+  });
 }
 
-try {
-  const child = spawn(binaryPath(), process.argv.slice(2), { stdio: "inherit" });
+async function main() {
+  const child = spawn(await binaryPath(), process.argv.slice(2), { stdio: "inherit" });
   const handlers = new Map();
   for (const signal of ["SIGINT", "SIGTERM"]) {
     const handler = () => child.kill(signal);
@@ -55,7 +53,9 @@ try {
     cleanup();
     process.exitCode = code ?? (128 + (constants.signals[signal] ?? 1));
   });
-} catch (error) {
+}
+
+main().catch((error) => {
   console.error(`serve-rs: ${error.message}`);
   process.exitCode = 1;
-}
+});

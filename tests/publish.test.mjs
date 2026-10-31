@@ -4,10 +4,9 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { publishNpm } from "../scripts/publish-npm.mjs";
-import { platforms } from "../scripts/platforms.mjs";
 
 const source = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
-const names = [...Object.keys(platforms).map((name) => `serve-rs-${name}`), source.name];
+const names = [source.name];
 const temporary = [];
 
 afterEach(async () => {
@@ -26,7 +25,7 @@ async function fixture() {
   return { directory, integrity };
 }
 
-test("publishes all native archives before the main package", async () => {
+test("publishes only the single serve-rs npm archive", async () => {
   const { directory } = await fixture();
   const published = [];
   const checked = [];
@@ -77,7 +76,7 @@ test("registry errors do not count as missing packages", async () => {
   expect(published).toHaveLength(0);
 });
 
-test("missing native archive prevents publishing or contacting the registry", async () => {
+test("missing launcher archive prevents publishing or contacting the registry", async () => {
   const { directory } = await fixture();
   await rm(join(directory, `${names[0]}-${source.version}.tgz`));
   const calls = [];
@@ -88,7 +87,7 @@ test("missing native archive prevents publishing or contacting the registry", as
   expect(calls).toHaveLength(0);
 });
 
-test("native publish failure stops before the main package", async () => {
+test("a failed npm publish reports the error", async () => {
   const { directory } = await fixture();
   const published = [];
   await expect(publishNpm(directory, {
@@ -97,4 +96,15 @@ test("native publish failure stops before the main package", async () => {
     log: () => {},
   })).rejects.toThrow("authentication failed");
   expect(published).toEqual([join(directory, `${names[0]}-${source.version}.tgz`)]);
+});
+
+test("read-only preflight checks integrity without publishing", async () => {
+  const { directory } = await fixture();
+  const published = [];
+  await publishNpm(directory, {
+    checkOnly: true,
+    fetchImpl: async () => new Response(null, { status: 404 }),
+    run: async (args) => { published.push(args); }, log: () => {},
+  });
+  expect(published).toHaveLength(0);
 });

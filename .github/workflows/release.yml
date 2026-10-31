@@ -42,9 +42,8 @@ jobs:
             if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.test(version)) {
               throw new Error("Expected a release version such as 0.1.0 or 0.2.0-beta.1");
             }
-            if (cargo.package.version !== version || lock.package.find(p => p.name === manifest.name)?.version !== version ||
-                Object.values(manifest.optionalDependencies).some(v => v !== version)) {
-              throw new Error("Cargo, npm, and optional dependency versions must match");
+            if (cargo.package.version !== version || lock.package.find(p => p.name === manifest.name)?.version !== version) {
+              throw new Error("Cargo and npm versions must match");
             }
             const tag = "v" + version;
             if (process.env.EXPECTED_TAG && process.env.EXPECTED_TAG !== tag) {
@@ -113,17 +112,21 @@ jobs:
       - name: Smoke test release binary
         shell: bash
         run: ./target/${{ matrix.target }}/release/${{ matrix.binary }} --version
-      - name: Stage npm packages
+      - name: Stage native release binary
         run: bun scripts/package.mjs --platform ${{ matrix.platform }} --binary target/${{ matrix.target }}/release/${{ matrix.binary }}
       - name: Archive native executable
         shell: bash
         run: |
-          mkdir -p dist/native
-          tar -czf "dist/native/serve-rs-${{ matrix.platform }}.tar.gz" -C "dist/npm/serve-rs-${{ matrix.platform }}" bin LICENSE
+          mkdir -p dist/archive-staging/bin
+          cp "target/${{ matrix.target }}/release/${{ matrix.binary }}" "dist/archive-staging/bin/${{ matrix.binary }}"
+          cp LICENSE dist/archive-staging/LICENSE
+          tar -czf "dist/native/serve-rs-${{ matrix.platform }}.tar.gz" -C dist/archive-staging bin LICENSE
       - uses: actions/upload-artifact@v4
         with:
           name: staged-${{ matrix.platform }}
-          path: dist/
+          path: |
+            dist/native/
+            dist/metadata/
           if-no-files-found: error
   assemble:
     needs: [version, build]
@@ -136,17 +139,15 @@ jobs:
           pattern: staged-*
           path: dist/
           merge-multiple: true
+      - name: Assemble npm launcher with pinned binary checksums
+        run: bun scripts/package.mjs
       - name: Check complete release
-        run: bun scripts/verify-release.mjs dist/npm
-      - name: Restore executable permissions
-        run: chmod +x dist/npm/serve-rs/bin/serve-rs.cjs dist/npm/serve-rs-*/bin/*
-      - name: Pack release tarballs
+        run: bun run prepublishOnly
+      - name: Pack npm launcher
         shell: bash
         run: |
           mkdir -p dist/tarballs
-          for package in dist/npm/*; do
-            bun pm pack --cwd "$package" --destination "$GITHUB_WORKSPACE/dist/tarballs"
-          done
+          bun pm pack --cwd dist/npm/serve-rs --destination "$GITHUB_WORKSPACE/dist/tarballs"
       - uses: actions/upload-artifact@v4
         with:
           name: npm-packages
@@ -175,11 +176,9 @@ jobs:
           path: dist/
       - name: Verify complete release
         run: bun run prepublishOnly
-      - name: Publish native packages, then serve-rs
-        run: bun run release:publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Publish GitHub release
+      - name: Check npm archive before changing GitHub assets
+        run: bun scripts/publish-npm.mjs dist/tarballs --check
+      - name: Publish GitHub binaries before the npm launcher
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -189,12 +188,16 @@ jobs:
           PRERELEASE: ${{ needs.version.outputs.prerelease }}
         run: |
           if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" dist/native/*.tar.gz dist/tarballs/*.tgz --clobber
+            gh release upload "$RELEASE_TAG" dist/native/* dist/tarballs/*.tgz --clobber
             gh release edit "$RELEASE_TAG" --draft=false
           else
             args=(--target "$GITHUB_SHA" --title "serve-rs $RELEASE_VERSION" --generate-notes)
             if [ "$PRERELEASE" = true ]; then
               args+=(--prerelease --latest=false)
             fi
-            gh release create "$RELEASE_TAG" "${args[@]}" dist/native/*.tar.gz dist/tarballs/*.tgz
+            gh release create "$RELEASE_TAG" "${args[@]}" dist/native/* dist/tarballs/*.tgz
           fi
+      - name: Publish serve-rs to npm
+        run: bun run release:publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

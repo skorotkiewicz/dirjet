@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, expect, test } from "bun:test";
-import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,10 +11,18 @@ const manifest = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
 let temporary;
 let launcher;
 let site;
+let cacheDirectory;
+let binaryServer;
+let downloads = 0;
+let downloadsEnabled = true;
+
+function launcherEnv(cache = cacheDirectory) {
+  return { ...process.env, SERVE_RS_CACHE_DIR: cache };
+}
 
 async function command(args, options = {}) {
   const started = performance.now();
-  const child = Bun.spawn(args, { cwd: root, stdout: "pipe", stderr: "pipe", timeout: 100_000, ...options });
+  const child = Bun.spawn(args, { cwd: root, stdout: "pipe", stderr: "pipe", timeout: 100_000, env: launcherEnv(), ...options });
   const [code, stdout, stderr] = await Promise.all([
     child.exited, new Response(child.stdout).text(), new Response(child.stderr).text(),
   ]);
@@ -27,19 +35,37 @@ async function command(args, options = {}) {
 
 beforeAll(async () => {
   temporary = await mkdtemp(join(tmpdir(), "serve-rs-test-"));
+  cacheDirectory = join(temporary, "cache");
   await command(["cargo", "build", "--locked"]);
   const staging = join(temporary, "staging");
   await command([
     process.execPath, "scripts/package.mjs", "--binary", join(root, "target/debug", binaryName),
-    "--out", staging,
+    "--out", staging, "--local",
   ]);
+  const mainPackage = join(staging, "npm/serve-rs");
+  const binaryManifestPath = join(mainPackage, "bin/binaries.json");
+  const binaryManifest = JSON.parse(await readFile(binaryManifestPath, "utf8"));
+  binaryServer = Bun.serve({
+    hostname: "127.0.0.1", port: 0,
+    fetch(request) {
+      if (!downloadsEnabled) return new Response("unavailable", { status: 503 });
+      if (new URL(request.url).pathname !== "/" + binaryManifest.binaries[platform].file) {
+        return new Response("not found", { status: 404 });
+      }
+      downloads++;
+      return new Response(Bun.file(join(root, "target/debug", binaryName)));
+    },
+  });
+  // A local release endpoint exercises the real downloader without GitHub access.
+  binaryManifest.baseUrl = binaryServer.url.href.replace(/\/$/, "");
+  await writeFile(binaryManifestPath, JSON.stringify(binaryManifest));
   // Pack and extract the actual release files into the installed package layout.
   const tarballs = join(temporary, "tarballs");
   await mkdir(tarballs);
   const installation = join(temporary, "installation/node_modules");
   await mkdir(installation, { recursive: true });
-  for (const name of ["serve-rs", `serve-rs-${platform}`]) {
-    await command([process.execPath, "pm", "pack", "--destination", tarballs], { cwd: join(staging, name) });
+  for (const name of ["serve-rs"]) {
+    await command([process.execPath, "pm", "pack", "--destination", tarballs], { cwd: mainPackage });
     const destination = join(installation, name);
     await mkdir(destination);
     await command(["tar", "-xzf", join(tarballs, `${name}-${manifest.version}.tgz`), "-C", destination, "--strip-components=1"]);
@@ -56,12 +82,13 @@ beforeAll(async () => {
 }, 120_000);
 
 afterAll(async () => {
+  binaryServer?.stop(true);
   if (temporary) await rm(temporary, { recursive: true, force: true });
 });
 
 async function withServer(args, callback) {
   const child = Bun.spawn([process.execPath, launcher, ...args, "--port", "0"], {
-    cwd: temporary, stdout: "pipe", stderr: "pipe",
+    cwd: temporary, stdout: "pipe", stderr: "pipe", env: launcherEnv(),
   });
   let timeout;
   const deadline = new Promise((_, reject) => {
@@ -111,16 +138,24 @@ const cliCommandTimeout = 20_000;
 test("staged npm launcher runs with Bun", async () => {
   expect((await command([process.execPath, launcher, "--version"], { timeout: cliCommandTimeout })).trim())
     .toBe(`serve-rs ${manifest.version}`);
+  expect(downloads).toBe(1);
+  expect((await command([process.execPath, launcher, "--version"], { timeout: cliCommandTimeout })).trim())
+    .toBe(`serve-rs ${manifest.version}`);
+  expect(downloads).toBe(1);
 }, cliTestTimeout);
 
 test.skipIf(!Bun.which("node"))("staged npm launcher runs with Node", async () => {
-  expect((await command(["node", launcher, "--version"], { timeout: cliCommandTimeout })).trim())
+  const before = downloads;
+  expect((await command(["node", launcher, "--version"], {
+    timeout: cliCommandTimeout, env: launcherEnv(join(temporary, "node-cache")),
+  })).trim())
     .toBe(`serve-rs ${manifest.version}`);
+  expect(downloads).toBe(before + 1);
 }, cliTestTimeout);
 
 test("staged npm launcher forwards CLI exit codes", async () => {
   const child = Bun.spawn([process.execPath, launcher, "--port", "invalid"], {
-    stdout: "ignore", stderr: "ignore", timeout: cliCommandTimeout,
+    stdout: "ignore", stderr: "ignore", timeout: cliCommandTimeout, env: launcherEnv(),
   });
   expect(await child.exited).toBe(2);
 }, cliTestTimeout);
@@ -155,19 +190,30 @@ test("directory npm command lists files and serves HTML", async () => {
   });
 });
 
-test("packed manifests contain the CLI and matching platform dependency", async () => {
-  const staging = join(temporary, "staging");
+test("one packed npm package contains the launcher and pinned checksums without native dependencies", async () => {
+  const staging = join(temporary, "staging/npm");
   const manifest = JSON.parse(await readFile(join(staging, "serve-rs/package.json"), "utf8"));
   expect(manifest.scripts).toBeUndefined();
-  expect(manifest.optionalDependencies[`serve-rs-${platform}`]).toBe(manifest.version);
-  const native = JSON.parse(await readFile(join(staging, `serve-rs-${platform}/package.json`), "utf8"));
-  expect(native.repository).toEqual(manifest.repository);
-  const missing = Bun.spawn([process.execPath, join(staging, "serve-rs/bin/serve-rs.cjs"), "--version"], {
-    stdout: "pipe", stderr: "pipe",
-  });
-  expect(await missing.exited).toBe(1);
-  expect(await new Response(missing.stderr).text()).toContain("optional dependencies enabled");
+  expect(manifest.optionalDependencies).toBeUndefined();
+  expect((await readdir(join(staging, "serve-rs/bin"))).sort())
+    .toEqual(["binaries.json", "binary.cjs", "serve-rs.cjs"]);
+  const binaries = JSON.parse(await readFile(join(staging, "serve-rs/bin/binaries.json"), "utf8"));
+  expect(binaries.version).toBe(manifest.version);
+  expect(binaries.binaries[platform].sha256).toMatch(/^[a-f0-9]{64}$/);
 });
+
+test("an unavailable first download fails clearly without installing a binary", async () => {
+  downloadsEnabled = false;
+  try {
+    const missing = Bun.spawn([process.execPath, launcher, "--version"], {
+      stdout: "pipe", stderr: "pipe", env: launcherEnv(join(temporary, "empty-cache")), timeout: cliCommandTimeout,
+    });
+    expect(await missing.exited).toBe(1);
+    expect(await new Response(missing.stderr).text()).toContain("Binary download returned HTTP 503");
+  } finally {
+    downloadsEnabled = true;
+  }
+}, cliTestTimeout);
 
 test.skipIf(process.platform === "win32")("bunx finds the installed CLI", async () => {
   const cwd = join(temporary, "installation");

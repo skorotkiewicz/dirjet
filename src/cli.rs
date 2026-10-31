@@ -7,7 +7,7 @@ use clap::Parser;
 #[command(
     version,
     about,
-    after_help = "Examples:\n  djet dist/\n  djet example.html\n  djet -s dist/ -l 8080\n  djet --host 0.0.0.0 --port 3000"
+    after_help = "Examples:\n  dirjet dist/\n  dirjet example.html\n  dirjet -s dist/ -l 8080\n  dirjet --host 0.0.0.0 --port 3000"
 )]
 pub(crate) struct Cli {
     /// Directory or file to serve.

@@ -8,6 +8,6 @@ try {
   const result = await verifyRelease(resolve(process.argv[2] ?? "dist"));
   console.log("Release " + result.version + " has one npm launcher and all " + Object.keys(result.binaries).length + " verified native binaries.");
 } catch (error) {
-  console.error("djet: " + error.message);
+  console.error("dirjet: " + error.message);
   process.exitCode = 1;
 }

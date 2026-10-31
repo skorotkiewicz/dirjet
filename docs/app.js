@@ -3,17 +3,17 @@
 (() => {
   const scenarios = {
     directory: {
-      command: "bunx djet public/", root: "public/",
+      command: "bunx dirjet public/", root: "public/",
       files: ["index.html", "style.css", "assets/"],
       url: "/", response: "index.html", caption: "Your index file, ready to view.",
     },
     file: {
-      command: "bunx djet example.html", root: "./",
+      command: "bunx dirjet example.html", root: "./",
       files: ["example.html", "style.css", "images/"],
       url: "/", response: "example.html", caption: "A single page, with its relative assets.",
     },
     spa: {
-      command: "bunx djet -s dist/", root: "dist/",
+      command: "bunx dirjet -s dist/", root: "dist/",
       files: ["index.html", "app.js", "assets/"],
       url: "/users/42", response: "index.html", caption: "Your app handles the client-side route.",
     },
@@ -66,7 +66,7 @@
   });
 
   setupTabs(document.querySelector(".runtime-tabs"), (tab) => {
-    const prefix = { bun: "bunx djet", npm: "npx djet", rust: "cargo run --" }[tab.dataset.runtime];
+    const prefix = { bun: "bunx dirjet", npm: "npx dirjet", rust: "cargo run --" }[tab.dataset.runtime];
     const output = document.getElementById("quickstart-command");
     const first = document.createElement("span");
     first.className = "code-comment";

@@ -18,7 +18,7 @@ export async function sourceManifest() {
 
 export function assetName(platform) {
   if (!Object.hasOwn(platforms, platform)) throw new Error("Unsupported platform: " + platform);
-  return "djet-" + platform + (platforms[platform].os === "win32" ? ".exe" : "");
+  return "dirjet-" + platform + (platforms[platform].os === "win32" ? ".exe" : "");
 }
 
 function releaseBaseUrl(manifest) {
@@ -84,14 +84,14 @@ async function collectBinaries(directory, manifest, local) {
 export async function packageRelease(directory, { local = false } = {}) {
   const manifest = await sourceManifest();
   const binaries = await collectBinaries(directory, manifest, local);
-  const destination = join(directory, "npm", "djet");
+  const destination = join(directory, "npm", "dirjet");
   await mkdir(join(destination, "bin"), { recursive: true });
   const { scripts, ...published } = manifest;
   await writeFile(join(destination, "package.json"), JSON.stringify(published, null, 2) + "\n");
-  for (const file of ["djet.cjs", "binary.cjs"]) {
+  for (const file of ["dirjet.cjs", "binary.cjs"]) {
     await copyFile(join(root, "bin", file), join(destination, "bin", file));
   }
-  await chmod(join(destination, "bin", "djet.cjs"), 0o755);
+  await chmod(join(destination, "bin", "dirjet.cjs"), 0o755);
   await writeFile(join(destination, "bin", "binaries.json"), JSON.stringify(binaries, null, 2) + "\n");
   for (const file of ["README.md", "LICENSE"]) {
     await copyFile(join(root, file), join(destination, file));
@@ -103,15 +103,15 @@ export async function packageRelease(directory, { local = false } = {}) {
 export async function verifyRelease(directory) {
   const source = await sourceManifest();
   const expected = await collectBinaries(directory, source, false);
-  const destination = join(directory, "npm", "djet");
+  const destination = join(directory, "npm", "dirjet");
   const published = JSON.parse(await readFile(join(destination, "package.json"), "utf8"));
   if (published.name !== source.name || published.version !== source.version || published.optionalDependencies ||
-      published.scripts || published.bin?.["djet"] !== "bin/djet.cjs") {
-    throw new Error("Invalid staged djet package");
+      published.scripts || published.bin?.["dirjet"] !== "bin/dirjet.cjs") {
+    throw new Error("Invalid staged dirjet package");
   }
   const actual = JSON.parse(await readFile(join(destination, "bin", "binaries.json"), "utf8"));
   if (!isDeepStrictEqual(actual, expected)) throw new Error("The npm binary manifest does not match the release assets");
-  for (const file of ["djet.cjs", "binary.cjs"]) {
+  for (const file of ["dirjet.cjs", "binary.cjs"]) {
     if (!(await readFile(join(root, "bin", file))).equals(await readFile(join(destination, "bin", file)))) {
       throw new Error("Staged launcher differs from source: " + file);
     }

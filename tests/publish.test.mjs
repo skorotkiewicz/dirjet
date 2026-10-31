@@ -14,7 +14,7 @@ afterEach(async () => {
 });
 
 async function fixture() {
-  const directory = await mkdtemp(join(tmpdir(), "djet-publish-"));
+  const directory = await mkdtemp(join(tmpdir(), "dirjet-publish-"));
   temporary.push(directory);
   const integrity = new Map();
   for (const name of names) {
@@ -25,7 +25,7 @@ async function fixture() {
   return { directory, integrity };
 }
 
-test("publishes only the single djet npm archive", async () => {
+test("publishes only the single dirjet npm archive", async () => {
   const { directory } = await fixture();
   const published = [];
   const checked = [];

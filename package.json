@@ -1,15 +1,15 @@
 {
-  "name": "djet",
+  "name": "dirjet",
   "version": "0.1.1",
   "description": "Serve directories and individual files with a Rust static file server",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/skorotkiewicz/djet.git"
+    "url": "git+https://github.com/skorotkiewicz/dirjet.git"
   },
-  "bugs": "https://github.com/skorotkiewicz/djet/issues",
+  "bugs": "https://github.com/skorotkiewicz/dirjet/issues",
   "bin": {
-    "djet": "bin/djet.cjs"
+    "dirjet": "bin/dirjet.cjs"
   },
   "files": ["bin", "README.md", "LICENSE"],
   "engines": { "node": ">=18" },

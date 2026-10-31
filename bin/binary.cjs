@@ -6,12 +6,12 @@ const { homedir } = require("node:os");
 const { join, resolve } = require("node:path");
 
 function defaultCacheDirectory() {
-  if (process.env.DJET_CACHE_DIR) return resolve(process.env.DJET_CACHE_DIR);
+  if (process.env.DIRJET_CACHE_DIR) return resolve(process.env.DIRJET_CACHE_DIR);
   if (process.platform === "win32") {
-    return join(process.env.LOCALAPPDATA || join(homedir(), "AppData", "Local"), "djet", "Cache");
+    return join(process.env.LOCALAPPDATA || join(homedir(), "AppData", "Local"), "dirjet", "Cache");
   }
-  if (process.platform === "darwin") return join(homedir(), "Library", "Caches", "djet");
-  return join(process.env.XDG_CACHE_HOME || join(homedir(), ".cache"), "djet");
+  if (process.platform === "darwin") return join(homedir(), "Library", "Caches", "dirjet");
+  return join(process.env.XDG_CACHE_HOME || join(homedir(), ".cache"), "dirjet");
 }
 
 async function matches(path, entry) {
@@ -32,13 +32,13 @@ async function getBinary({
   timeoutMs = 30_000, log = () => {},
 }) {
   if (manifest.version !== version || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version)) {
-    throw new Error("Binary manifest does not match the djet package version.");
+    throw new Error("Binary manifest does not match the dirjet package version.");
   }
   if (!Object.hasOwn(manifest.binaries, platform)) {
     throw new Error("Unsupported platform: " + platform + ". Build from source with cargo build --release.");
   }
   const entry = manifest.binaries[platform];
-  const expectedFile = "djet-" + platform + (platform.startsWith("win32-") ? ".exe" : "");
+  const expectedFile = "dirjet-" + platform + (platform.startsWith("win32-") ? ".exe" : "");
   if (entry.file !== expectedFile || !/^[a-f0-9]{64}$/.test(entry.sha256) ||
       !Number.isSafeInteger(entry.size) || entry.size <= 0 || entry.size > 64 * 1024 * 1024) {
     throw new Error("Invalid binary manifest for " + platform + ".");
@@ -59,7 +59,7 @@ async function getBinary({
   const temporary = await mkdtemp(join(directory, ".download-"));
   const file = join(temporary, entry.file);
   try {
-    log("Downloading djet " + version + " for " + platform + "...");
+    log("Downloading dirjet " + version + " for " + platform + "...");
     const response = await fetchImpl(url.href, { signal: AbortSignal.timeout(timeoutMs) });
     if (!response.ok || !response.body) {
       throw new Error("Binary download returned HTTP " + response.status + ". Check that GitHub release v" + version + " is available.");

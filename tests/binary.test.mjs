@@ -11,12 +11,12 @@ afterEach(async () => {
   await Promise.all(temporary.splice(0).map((path) => rm(path, { recursive: true, force: true })));
 });
 async function fixture() {
-  const directory = await mkdtemp(join(tmpdir(), "djet-download-"));
+  const directory = await mkdtemp(join(tmpdir(), "dirjet-download-"));
   temporary.push(directory);
   const contents = Buffer.from("verified binary fixture");
   const version = "1.2.3";
   const platform = "linux-x64";
-  const entry = { file: "djet-linux-x64", size: contents.length, sha256: createHash("sha256").update(contents).digest("hex") };
+  const entry = { file: "dirjet-linux-x64", size: contents.length, sha256: createHash("sha256").update(contents).digest("hex") };
   const manifest = { version, baseUrl: "https://example.invalid/releases/v1.2.3", binaries: { [platform]: entry } };
   return { directory, contents, entry, options: { manifest, version, platform, cacheDirectory: directory } };
 }
@@ -28,7 +28,7 @@ test("first run downloads the selected binary and the second run works without n
     requested.push(url);
     return new Response(contents);
   } });
-  expect(requested).toEqual(["https://example.invalid/releases/v1.2.3/djet-linux-x64"]);
+  expect(requested).toEqual(["https://example.invalid/releases/v1.2.3/dirjet-linux-x64"]);
   expect(Buffer.from(await readFile(path)).equals(contents)).toBe(true);
   const cached = await getBinary({ ...options, fetchImpl: () => { throw new Error("offline"); } });
   expect(cached).toBe(path);
@@ -74,7 +74,7 @@ test("simultaneous first runs leave one valid cache file", async () => {
   const paths = await Promise.all(Array.from({ length: 4 }, () =>
     getBinary({ ...options, fetchImpl: async () => new Response(contents) })));
   expect(new Set(paths).size).toBe(1);
-  expect(await readdir(join(directory, options.version, options.platform))).toEqual(["djet-linux-x64"]);
+  expect(await readdir(join(directory, options.version, options.platform))).toEqual(["dirjet-linux-x64"]);
   expect(Buffer.from(await readFile(paths[0])).equals(contents)).toBe(true);
 });
 

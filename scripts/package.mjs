@@ -15,7 +15,7 @@ try {
   const directory = resolve(values.out);
   if (values.binary || values.local) {
     if (!platforms[values.platform]) throw new Error("Unsupported platform: " + values.platform);
-    const name = platforms[values.platform].os === "win32" ? "djet.exe" : "djet";
+    const name = platforms[values.platform].os === "win32" ? "dirjet.exe" : "dirjet";
     const binary = resolve(values.binary ?? join(root, "target", "release", name));
     console.log("Staged " + await stageBinary(directory, values.platform, binary));
   }
@@ -24,6 +24,6 @@ try {
     if (values.local) console.log("Local test package only. Use GitHub Actions for a complete release.");
   }
 } catch (error) {
-  console.error("djet: " + error.message);
+  console.error("dirjet: " + error.message);
   process.exitCode = 1;
 }

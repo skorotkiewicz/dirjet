@@ -50,6 +50,8 @@ Missing routes such as `/users/42` return `index.html`. Missing assets such as `
 
 ## Develop
 
+The documentation website is in `docs/`. Preview it with `bun run docs`, then open the address printed in the terminal. It uses plain HTML, CSS, and JavaScript and requires no frontend build step.
+
 Install stable Rust and Bun. No JavaScript dependencies need to be installed.
 
 ```sh

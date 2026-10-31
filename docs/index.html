@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Serve a directory or a single HTML file with serve-rs. Commands, examples, and reference for a Rust static file server distributed through npm.">
+  <meta name="theme-color" content="#faf9f6">
+  <title>serve-rs · Files to localhost</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="icon-external" viewBox="0 0 24 24"><path d="M14 4h6v6m0-6L10 14m0-9H5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-5"/></symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M15 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h3"/></symbol>
+    <symbol id="icon-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3Z"/></symbol>
+    <symbol id="icon-file" viewBox="0 0 24 24"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8Zm0 0v5h5M9 13h6m-6 4h4"/></symbol>
+    <symbol id="icon-terminal" viewBox="0 0 24 24"><path d="m5 6 6 6-6 6m9 0h5"/></symbol>
+    <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></symbol>
+    <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+    <symbol id="icon-box" viewBox="0 0 24 24"><path d="m12 3 9 5v9l-9 5-9-5V8Zm0 10v9M3 8l9 5 9-5M8 5l9 5"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  </svg>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="#introduction" aria-label="serve-rs documentation home"><span class="brand-mark" aria-hidden="true"><svg class="icon"><use href="#icon-terminal"/></svg></span><span>serve<span class="brand-suffix">-rs</span></span></a>
+      <span class="header-divider" aria-hidden="true"></span><span class="header-label">Documentation</span>
+      <nav class="header-nav" aria-label="Main navigation"><a class="selected" href="#quickstart">Guide</a><a href="#cli-reference">Reference</a><a href="https://github.com/skorotkiewicz/serve-rs" target="_blank" rel="noreferrer">GitHub <svg class="icon"><use href="#icon-external"/></svg></a><a href="https://www.npmjs.com/package/serve-rs" target="_blank" rel="noreferrer">npm <svg class="icon"><use href="#icon-external"/></svg></a></nav>
+      <div class="header-actions"><span class="version">v0.1.0</span><button class="icon-button mobile-search enhanced-only" type="button" data-open-search aria-label="Search documentation"><svg class="icon"><use href="#icon-search"/></svg></button><button class="icon-button menu-toggle enhanced-only" type="button" id="menu-toggle" aria-label="Open documentation navigation" aria-haspopup="dialog"><svg class="icon"><use href="#icon-menu"/></svg></button></div>
+    </div>
+  </header>
+  <div class="page-layout">
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+        <button class="search-trigger enhanced-only" data-open-search type="button"><svg class="icon"><use href="#icon-search"/></svg><span>Search docs</span><kbd data-search-shortcut>Ctrl K</kbd></button>
+        <nav class="docs-nav" aria-label="Documentation">
+          <div class="nav-group"><p class="nav-label">GET STARTED</p><a href="#introduction" aria-current="location"><svg class="icon"><use href="#icon-terminal"/></svg>Introduction</a><a href="#quickstart"><span class="nav-indent"></span>Quickstart</a></div>
+          <div class="nav-group"><p class="nav-label">SERVING FILES</p><a href="#directories"><svg class="icon"><use href="#icon-folder"/></svg>Directories</a><a href="#single-file"><svg class="icon"><use href="#icon-file"/></svg>Single HTML file</a><a href="#single-page-apps"><span class="nav-indent"></span>Single-page apps</a></div>
+          <div class="nav-group"><p class="nav-label">GO FURTHER</p><a href="#cli-reference"><span class="nav-indent"></span>CLI reference</a><a href="#recipes"><span class="nav-indent"></span>Everyday recipes</a><a href="#http-behavior"><span class="nav-indent"></span>HTTP behavior</a><a href="#distribution"><svg class="icon"><use href="#icon-box"/></svg>npm distribution</a><a href="#troubleshooting"><span class="nav-indent"></span>Troubleshooting</a></div>
+        </nav>
+        <div class="sidebar-note"><span class="tiny-mark" aria-hidden="true">&gt;_</span><p>Written in Rust.<br>Run from your terminal.</p><a href="https://github.com/skorotkiewicz/serve-rs" target="_blank" rel="noreferrer">Source on GitHub <svg class="icon"><use href="#icon-external"/></svg></a><br><a href="https://github.com/skorotkiewicz/serve-rs/blob/main/LICENSE">MIT licensed <svg class="icon"><use href="#icon-external"/></svg></a></div>
+      </div>
+    </aside>
+    <main id="main" tabindex="-1">
+      <article class="documentation">
+        <section class="hero doc-section" id="introduction" aria-labelledby="intro-title" data-search-title="Introduction">
+          <div class="eyebrow"><span class="eyebrow-line"></span> FILES → LOCALHOST</div>
+          <h1 id="intro-title">Serve a folder.<br>Or just <span class="accent-text">a file.</span></h1>
+          <p class="hero-description">A small static file server, written in Rust.<br class="desktop-break"> Give it a path. Open your browser. Get on with it.</p>
+          <div class="hero-meta"><span>Native binaries</span><span class="meta-dot" aria-hidden="true">·</span><span>Distributed through npm</span><span class="meta-dot" aria-hidden="true">·</span><span>MIT license</span></div>
+          <div class="command-preview" aria-label="Interactive command examples">
+            <div class="preview-topline"><span><svg class="icon"><use href="#icon-terminal"/></svg> ONE COMMAND. YOUR FILES, SERVED.</span><span class="preview-label">COMMAND PREVIEW</span></div>
+            <div class="scenario-tabs" role="tablist" aria-label="Choose a serving example"><button id="tab-directory" role="tab" aria-selected="true" aria-controls="scenario-panel" tabindex="0" data-scenario="directory"><svg class="icon"><use href="#icon-folder"/></svg>Directory</button><button id="tab-file" role="tab" aria-selected="false" aria-controls="scenario-panel" tabindex="-1" data-scenario="file"><svg class="icon"><use href="#icon-file"/></svg>HTML file</button><button id="tab-spa" role="tab" aria-selected="false" aria-controls="scenario-panel" tabindex="-1" data-scenario="spa"><svg class="icon"><use href="#icon-box"/></svg>SPA</button></div>
+            <div id="scenario-panel" role="tabpanel" aria-labelledby="tab-directory" tabindex="0">
+              <div class="preview-command code-block"><span class="command-prompt" aria-hidden="true">$</span><pre><code id="preview-command">bunx serve-rs public/</code></pre><button class="copy-button enhanced-only" data-copy-target="preview-command" type="button" aria-label="Copy example command"><svg class="icon"><use href="#icon-copy"/></svg><span>Copy</span></button></div>
+              <div class="file-to-browser">
+                <div class="preview-source"><span class="mini-label">ON DISK</span><div class="file-tree" id="preview-tree"><div class="tree-root"><svg class="icon"><use href="#icon-folder"/></svg><span>public/</span></div><div class="tree-file tree-highlight"><span>├─</span> index.html</div><div class="tree-file"><span>├─</span> style.css</div><div class="tree-file"><span>└─</span> assets/</div></div></div>
+                <div class="route-connector" aria-hidden="true"><svg class="icon"><use href="#icon-arrow"/></svg></div>
+                <div class="preview-destination"><span class="mini-label">IN YOUR BROWSER</span><span class="local-url">127.0.0.1:3000<span id="preview-url">/</span></span><div class="request-result"><span class="status-code">200</span><svg class="icon"><use href="#icon-file"/></svg><code id="preview-response">index.html</code></div><span class="preview-caption" id="preview-caption">Your index file, ready to view.</span></div>
+              </div>
+            </div>
+            <div class="preview-footer"><svg class="icon"><use href="#icon-check"/></svg><span>No Rust toolchain needed for npm installs.</span><a href="#quickstart">Get started <svg class="icon"><use href="#icon-arrow"/></svg></a></div>
+          </div>
+          <div class="release-note"><svg class="icon"><use href="#icon-info"/></svg><p><strong>Before the first npm release</strong><br>The npm commands below describe the published package. Try it now from this repository with <code>cargo run -- docs/</code>.</p></div>
+        </section>
+        <section class="doc-section" id="quickstart" aria-labelledby="quickstart-title" data-search-title="Quickstart">
+          <div class="section-heading"><span class="section-number">01</span><h2 id="quickstart-title">Up and serving</h2><a class="heading-anchor" href="#quickstart" aria-label="Link to quickstart">#</a></div>
+          <p>Start with a directory or an HTML file. No config file required.</p>
+          <div class="steps">
+            <div class="step"><span class="step-number">1</span><div class="step-content"><h3>Run it in your terminal</h3><p>Use Bun or npm after publishing. To run from the repository, choose Rust.</p>
+              <div class="quickstart-example"><div class="runtime-tabs" role="tablist" aria-label="Choose a command runner"><button role="tab" id="runtime-bun" aria-selected="true" aria-controls="runtime-panel" tabindex="0" data-runtime="bun">Bun</button><button role="tab" id="runtime-npm" aria-selected="false" aria-controls="runtime-panel" tabindex="-1" data-runtime="npm">npm</button><button role="tab" id="runtime-rust" aria-selected="false" aria-controls="runtime-panel" tabindex="-1" data-runtime="rust">Rust</button></div><div role="tabpanel" id="runtime-panel" aria-labelledby="runtime-bun" tabindex="0"><div class="code-block"><pre><code id="quickstart-command"><span class="code-comment"># Serve a directory</span>
+bunx serve-rs public/
+
+<span class="code-comment"># Or a single HTML file</span>
+bunx serve-rs example.html</code></pre><button class="copy-button enhanced-only" data-copy-target="quickstart-command" type="button" aria-label="Copy quickstart commands"><svg class="icon"><use href="#icon-copy"/></svg><span>Copy</span></button></div></div></div>
+            </div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content"><h3>Open localhost</h3><p>Visit <code>http://127.0.0.1:3000</code>. That is the default address; the terminal prints the actual address when you choose another port.</p></div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content"><h3>Done? Press <kbd>Ctrl</kbd> <span class="key-plus">+</span> <kbd>C</kbd></h3><p>The server finishes active requests and shuts down.</p></div></div>
+          </div>
+          <div class="inline-note"><svg class="icon"><use href="#icon-info"/></svg><p>Only Bun installed? Use <code>bunx --bun serve-rs public/</code>. The default npm launcher uses Node.js 18+.</p></div>
+        </section>
+        <section class="doc-section" id="directories" aria-labelledby="directories-title" data-search-title="Serve a directory">
+          <div class="section-heading"><span class="section-number">02</span><h2 id="directories-title">A directory becomes a website</h2><a class="heading-anchor" href="#directories" aria-label="Link to directories">#</a></div>
+          <p>Point serve-rs at your built site, a collection of files, or your current directory.</p>
+          <div class="code-block"><pre><code id="directory-command">bunx serve-rs public/</code></pre><button class="copy-button enhanced-only" data-copy-target="directory-command" type="button" aria-label="Copy directory command"><svg class="icon"><use href="#icon-copy"/></svg><span>Copy</span></button></div>
+          <div class="behavior-list"><div><span class="behavior-symbol">/</span><p><strong>Have an <code>index.html</code>?</strong> It is served when you open that directory.</p></div><div><svg class="icon"><use href="#icon-folder"/></svg><p><strong>No index file?</strong> Browse a directory listing with links to its visible files.</p></div><div><svg class="icon"><use href="#icon-arrow"/></svg><p><strong>Relative assets work.</strong> Directory URLs redirect to a trailing slash.</p></div></div>
+          <p class="supporting-copy">Leave out the path to serve the current directory. Add <a href="#recipes"><code>--no-listing</code></a> to return 404 when a directory has no index.</p>
+        </section>
+        <section class="doc-section" id="single-file" aria-labelledby="single-file-title" data-search-title="Serve a single HTML file">
+          <div class="section-heading"><span class="section-number">03</span><h2 id="single-file-title">Just one HTML file? That works.</h2><a class="heading-anchor" href="#single-file" aria-label="Link to single-file serving">#</a></div>
+          <p>Preview a page without moving or renaming it. Both the root URL and the filename URL serve your chosen file.</p>
+          <div class="code-block"><pre><code id="file-command">bunx serve-rs example.html</code></pre><button class="copy-button enhanced-only" data-copy-target="file-command" type="button" aria-label="Copy single-file command"><svg class="icon"><use href="#icon-copy"/></svg><span>Copy</span></button></div>
+          <div class="route-table" aria-label="Single-file URL mapping"><div><code>GET /</code><svg class="icon"><use href="#icon-arrow"/></svg><code>example.html</code></div><div><code>GET /example.html</code><svg class="icon"><use href="#icon-arrow"/></svg><code>example.html</code></div><div><code>GET /style.css</code><svg class="icon"><use href="#icon-arrow"/></svg><span>Sibling stylesheet</span></div></div>
+          <div class="inline-note"><svg class="icon"><use href="#icon-info"/></svg><p>The file's parent directory is the document root, so sibling files and assets in subdirectories are accessible by URL. Directory listings stay disabled in this mode.</p></div>
+        </section>
+        <section class="doc-section" id="single-page-apps" aria-labelledby="spa-title" data-search-title="Single-page applications and SPA fallback">
+          <div class="section-heading"><span class="section-number">04</span><h2 id="spa-title">Let your app handle the route</h2><a class="heading-anchor" href="#single-page-apps" aria-label="Link to SPA serving">#</a></div>
+          <p>Add <code>--single</code> or <code>-s</code> to return your entry HTML for missing extensionless routes. Your client-side router takes it from there.</p>
+          <div class="code-block"><pre><code id="spa-command">bunx serve-rs -s dist/</code></pre><button class="copy-button enhanced-only" data-copy-target="spa-command" type="button" aria-label="Copy SPA command"><svg class="icon"><use href="#icon-copy"/></svg><span>Copy</span></button></div>
+          <div class="route-table"><div><code>GET /users/42</code><svg class="icon"><use href="#icon-arrow"/></svg><span><code>index.html</code> <span class="small-tag">200</span></span></div><div><code>GET /missing.js</code><svg class="icon"><use href="#icon-arrow"/></svg><span>Not found <span class="small-tag neutral-tag">404</span></span></div></div>
+          <p class="supporting-copy">Missing assets still return 404. With a file argument, <code>-s</code> uses that file as the entry. Startup fails if the required entry file is missing.</p>
+        </section>
+        <section class="doc-section" id="cli-reference" aria-labelledby="cli-title" data-search-title="CLI reference, flags, port, host and options">
+          <div class="section-heading"><span class="section-number">05</span><h2 id="cli-title">The whole CLI</h2><a class="heading-anchor" href="#cli-reference" aria-label="Link to CLI reference">#</a></div>
+          <p>A path and a few switches. Defaults are enough for a local preview.</p>
+          <div class="cli-synopsis"><code>serve-rs <span>[OPTIONS]</span> <span>[PATH]</span></code><span>PATH defaults to <code>.</code></span></div>
+          <div class="table-scroll" role="region" aria-label="Command-line options" tabindex="0"><table class="options-table"><caption class="sr-only">serve-rs command-line flags and their defaults</caption><thead><tr><th scope="col">Option</th><th scope="col">Default</th><th scope="col">What it does</th></tr></thead><tbody>
+            <tr><td><code>-p, --port &lt;PORT&gt;</code><small>Also <code>-l, --listen</code></small></td><td><code>3000</code></td><td>Choose a TCP port. Use <code>0</code> for an available port.</td></tr>
+            <tr><td><code>--host &lt;IP&gt;</code></td><td><code>127.0.0.1</code></td><td>Set the bind address. Use <code>0.0.0.0</code> for network access.</td></tr>
+            <tr><td><code>-s, --single</code></td><td><span class="default-off">Off</span></td><td>Fallback to the entry HTML for missing extensionless routes.</td></tr>
+            <tr><td><code>--no-listing</code></td><td><span class="default-off">Off</span></td><td>Return 404 for directories without <code>index.html</code>.</td></tr>
+            <tr><td><code>-h, --help</code></td><td><span aria-label="Not applicable">n/a</span></td><td>Print command help.</td></tr>
+            <tr><td><code>-V, --version</code></td><td><span aria-label="Not applicable">n/a</span></td><td>Print the installed version.</td></tr>
+          </tbody></table></div>
+        </section>
+        <section class="doc-section" id="recipes" aria-labelledby="recipes-title" data-search-title="Everyday recipes: change port, LAN access, no listing, Bun only">
+          <div class="section-heading"><span class="section-number">06</span><h2 id="recipes-title">A few useful variations</h2><a class="heading-anchor" href="#recipes" aria-label="Link to recipes">#</a></div>
+          <p>Small changes for the way you work.</p>
+          <div class="recipe-list">
+            <details open><summary><span>Use a different port</span><code>-l</code><svg class="icon"><use href="#icon-chevron"/></svg></summary><div class="detail-content"><p>Choose a fixed port, or use <code>--port 0</code> and read the selected port from the terminal.</p><div class="code-block"><pre><code id="recipe-port">bunx serve-rs public/ -l 8080</code></pre><button class="copy-button enhanced-only" data-copy-target="recipe-port" type="button" aria-label="Copy custom-port command"><svg class="icon"><use href="#icon-copy"/></svg><span>Copy</span></button></div></div></details>
+            <details><summary><span>Open it to your local network</span><code>--host</code><svg class="icon"><use href="#icon-chevron"/></svg></summary><div class="detail-content"><p>Bind to every network interface. On another device, use your serving machine's network address and the selected port.</p><div class="code-block"><pre><code id="recipe-network">bunx serve-rs public/ --host 0.0.0.0</code></pre><button class="copy-button enhanced-only" data-copy-target="recipe-network" type="button" aria-label="Copy network-access command"><svg class="icon"><use href="#icon-copy"/></svg><span>Copy</span></button></div></div></details>
+            <details><summary><span>Turn off directory listings</span><code>--no-listing</code><svg class="icon"><use href="#icon-chevron"/></svg></summary><div class="detail-content"><p>Directories with an index still work. Directories without one return 404.</p><div class="code-block"><pre><code id="recipe-listing">bunx serve-rs public/ --no-listing</code></pre><button class="copy-button enhanced-only" data-copy-target="recipe-listing" type="button" aria-label="Copy no-listing command"><svg class="icon"><use href="#icon-copy"/></svg><span>Copy</span></button></div></div></details>
+            <details><summary><span>Run with Bun, without Node.js</span><code>--bun</code><svg class="icon"><use href="#icon-chevron"/></svg></summary><div class="detail-content"><p>Tell bunx to use Bun for the JavaScript launcher. The server itself runs as a native Rust executable.</p><div class="code-block"><pre><code id="recipe-bun">bunx --bun serve-rs example.html</code></pre><button class="copy-button enhanced-only" data-copy-target="recipe-bun" type="button" aria-label="Copy Bun-only command"><svg class="icon"><use href="#icon-copy"/></svg><span>Copy</span></button></div></div></details>
+          </div>
+        </section>
+        <section class="doc-section" id="http-behavior" aria-labelledby="http-title" data-search-title="HTTP behavior, MIME types, HEAD, ranges, caching and path handling">
+          <div class="section-heading"><span class="section-number">07</span><h2 id="http-title">What happens on a request</h2><a class="heading-anchor" href="#http-behavior" aria-label="Link to HTTP behavior">#</a></div>
+          <p>Files stream from disk with content types inferred from their extensions.</p>
+          <dl class="reference-list"><div><dt>GET &amp; HEAD</dt><dd>Read files or request their headers. Other methods return 405.</dd></div><div><dt>Byte ranges</dt><dd>Range requests support partial downloads and media seeking.</dd></div><div><dt>Cache revalidation</dt><dd><code>Cache-Control: no-cache</code> makes browsers revalidate. Last-Modified conditional requests can return 304.</dd></div><div><dt>Path handling</dt><dd>Dotfiles, parent traversal, and symlinks resolving outside the document root are rejected.</dd></div></dl>
+          <div class="inline-note"><svg class="icon"><use href="#icon-info"/></svg><p><strong>Serve the build output.</strong> serve-rs does not transpile TypeScript or JSX. It does not provide live reload, TLS, or full <code>serve</code> configuration compatibility.</p></div>
+        </section>
+        <section class="doc-section" id="distribution" aria-labelledby="distribution-title" data-search-title="npm distribution, native binaries, platforms, packaging and publishing">
+          <div class="section-heading"><span class="section-number">08</span><h2 id="distribution-title">Rust inside. npm outside.</h2><a class="heading-anchor" href="#distribution" aria-label="Link to npm distribution">#</a></div>
+          <p>The <a href="https://www.npmjs.com/package/serve-rs" target="_blank" rel="noreferrer">serve-rs npm package</a> launches the prebuilt binary for your platform. End users do not need Cargo or a Rust compiler.</p>
+          <div class="distribution-diagram"><div><svg class="icon"><use href="#icon-box"/></svg><code>serve-rs</code><span>Small JavaScript launcher</span></div><svg class="icon diagram-arrow"><use href="#icon-arrow"/></svg><div><svg class="icon"><use href="#icon-terminal"/></svg><code>Native binary</code><span>Selected optional dependency</span></div></div>
+          <div class="platforms"><span>Linux <small>x64 · ARM64</small></span><span>macOS <small>x64 · ARM64</small></span><span>Windows <small>x64 · ARM64</small></span></div>
+          <p class="supporting-copy">Linux release binaries use musl. Installation does not use postinstall scripts or runtime binary downloads. Keep optional dependencies enabled.</p>
+          <details class="maintainer-details"><summary><span>Building and publishing a release</span><svg class="icon"><use href="#icon-chevron"/></svg></summary><div class="detail-content"><p>From the repository, stage the package for your current machine:</p><div class="code-block"><pre><code id="package-command">bun run package</code></pre><button class="copy-button enhanced-only" data-copy-target="package-command" type="button" aria-label="Copy packaging command"><svg class="icon"><use href="#icon-copy"/></svg><span>Copy</span></button></div><p>For a full release, run the <strong>Release packages</strong> GitHub Actions workflow. It builds and tests six platforms and produces an <code>npm-packages</code> artifact.</p><ol><li>Confirm npm ownership of the main and platform package names.</li><li>Keep Cargo and npm versions in sync.</li><li>Extract the release artifact into <code>dist/</code>.</li><li>Run <code>bun scripts/verify-release.mjs dist/npm</code>.</li><li>Publish all six native tarballs, then the main package tarball.</li></ol><p>Publish the complete staged release. The workflow builds artifacts and does not publish them automatically.</p></div></details>
+        </section>
+        <section class="doc-section" id="troubleshooting" aria-labelledby="troubleshooting-title" data-search-title="Troubleshooting: port occupied, missing binary, JavaScript and hidden files">
+          <div class="section-heading"><span class="section-number">09</span><h2 id="troubleshooting-title">If something gets in the way</h2><a class="heading-anchor" href="#troubleshooting" aria-label="Link to troubleshooting">#</a></div>
+          <div class="recipe-list">
+            <details><summary><span>The port is already in use</span><svg class="icon"><use href="#icon-chevron"/></svg></summary><div class="detail-content"><p>Choose another port with <code>-l 8080</code> or let the operating system select one with <code>--port 0</code>. serve-rs prints the resulting address.</p></div></details>
+            <details><summary><span>The launcher cannot find a native binary</span><svg class="icon"><use href="#icon-chevron"/></svg></summary><div class="detail-content"><p>Reinstall with optional dependencies enabled. For a source checkout, run <code>cargo build --release</code> first. Before the first release, use <code>cargo run -- public/</code> from the repository.</p></div></details>
+            <details><summary><span>My TypeScript or JSX does not run</span><svg class="icon"><use href="#icon-chevron"/></svg></summary><div class="detail-content"><p>Build your application first, then serve its output directory. serve-rs returns files as they are; it does not compile source code or bundle frontend assets.</p></div></details>
+            <details><summary><span>A file returns 404</span><svg class="icon"><use href="#icon-chevron"/></svg></summary><div class="detail-content"><p>Check the document root and filename. Dotfiles and paths outside the root are unavailable. In SPA mode, missing files with extensions still return 404 instead of your entry HTML.</p></div></details>
+          </div>
+          <a class="back-to-top" href="#introduction">Back to the beginning <svg class="icon"><use href="#icon-arrow"/></svg></a>
+        </section>
+        <footer class="article-footer"><span class="footer-brand">&gt;_ <strong>serve-rs</strong></span><span>A path. A port. Your files.</span><a href="https://github.com/skorotkiewicz/serve-rs/blob/main/LICENSE">MIT license <svg class="icon"><use href="#icon-external"/></svg></a></footer>
+      </article>
+    </main>
+    <aside class="page-outline" aria-label="On this page"><div class="outline-inner"><p class="nav-label">ON THIS PAGE</p><nav><a href="#introduction" aria-current="location">Introduction</a><a href="#quickstart">Quickstart</a><a href="#directories">Directories</a><a href="#single-file">Single HTML file</a><a href="#single-page-apps">Single-page apps</a><a href="#cli-reference">CLI reference</a><a href="#recipes">Everyday recipes</a><a href="#http-behavior">HTTP behavior</a><a href="#distribution">npm distribution</a><a href="#troubleshooting">Troubleshooting</a></nav><div class="outline-tip"><span class="mini-label">THE DEFAULTS</span><code>127.0.0.1:3000</code><span>Local to your machine.<br>Ready for your browser.</span></div></div></aside>
+  </div>
+  <dialog id="search-dialog" class="search-dialog" aria-labelledby="search-title"><div class="search-dialog-header"><svg class="icon"><use href="#icon-search"/></svg><label for="search-input" class="sr-only" id="search-title">Search documentation</label><input id="search-input" type="search" placeholder="Search commands, flags, guides…" autocomplete="off" spellcheck="false"><button class="icon-button" type="button" data-close-dialog aria-label="Close search"><svg class="icon"><use href="#icon-close"/></svg></button></div><div class="search-results-container"><p class="search-results-label" id="search-result-count" role="status">Jump to a section</p><ul id="search-results" class="search-results"></ul><div id="search-empty" class="search-empty" hidden><svg class="icon"><use href="#icon-search"/></svg><p>No matching sections.</p><span>Try &quot;port&quot;, &quot;HTML&quot;, or &quot;SPA&quot;.</span></div></div><div class="search-dialog-footer"><span><kbd>↑</kbd><kbd>↓</kbd> to navigate</span><span><kbd>Enter</kbd> to open</span><span><kbd>Esc</kbd> to close</span></div></dialog>
+  <dialog id="mobile-navigation" class="mobile-navigation" aria-labelledby="mobile-nav-title"><div class="mobile-nav-header"><span id="mobile-nav-title">Documentation</span><button class="icon-button" type="button" data-close-dialog aria-label="Close navigation"><svg class="icon"><use href="#icon-close"/></svg></button></div><div id="mobile-nav-content"></div></dialog>
+  <div class="toast" role="status" id="copy-status" hidden></div>
+  <noscript><p class="noscript-note">All documentation is available without JavaScript. Enable it for search, command tabs, and copy buttons.</p></noscript>
+</body>
+</html>

@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "description": "Serve directories and individual files with a Rust static file server",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skorotkiewicz/serve-rs.git"
+  },
+  "bugs": "https://github.com/skorotkiewicz/serve-rs/issues",
   "bin": {
     "serve-rs": "bin/serve-rs.cjs"
   },
@@ -10,6 +15,7 @@
   "engines": { "node": ">=18" },
   "keywords": ["serve", "static", "server", "rust", "bun"],
   "scripts": {
+    "docs": "cargo run -- docs/",
     "dev": "cargo run --",
     "build": "cargo build --release --locked",
     "test": "cargo test --locked && bun test",

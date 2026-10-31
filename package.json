@@ -1,6 +1,6 @@
 {
   "name": "dirjet",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Serve directories and individual files with a Rust static file server",
   "license": "MIT",
   "repository": {

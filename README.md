@@ -75,23 +75,38 @@ bun run package
 bun pm pack --cwd dist/npm/serve-rs --dry-run
 ```
 
-This creates `dist/npm/serve-rs/` and `dist/npm/serve-rs-<platform>/`. For cross-compiled artifacts, pass the platform and binary explicitly:
+This creates `dist/npm/serve-rs/` and `dist/npm/serve-rs-<platform>/` for local testing. It builds only the current platform. Use GitHub Actions for a complete release; no local packaging or publishing is required.
+
+For cross-compiled artifacts, pass the platform and binary explicitly:
 
 ```sh
 bun scripts/package.mjs --platform linux-x64 --binary target/x86_64-unknown-linux-musl/release/serve-rs
 ```
 
-Do not publish a partial release. The **Release packages** GitHub Actions workflow builds and tests all six platforms, checks package versions, and uploads a combined `npm-packages` artifact. It only builds artifacts; it does not publish to npm.
+### Set up npm authentication
 
-To publish:
+For the first publish, add a granular npm publish token as the repository's Actions secret named `NPM_TOKEN`. The token must allow publishing `serve-rs` and the six `serve-rs-<platform>` packages. If the npm account requires 2FA, use a token configured for CI publishing. Confirm that all seven package names are available to your account.
 
-1. Confirm you can publish `serve-rs` and all six `serve-rs-<platform>` package names on npm. If a name is unavailable, update the manifests, launcher, and packaging scripts consistently.
-2. Keep the version in `Cargo.toml`, `Cargo.lock`, `package.json`, and all optional dependency versions in sync.
-3. Run **Release packages** against the release commit. Download and extract its `npm-packages` artifact into `dist/`. It contains `npm/` staging directories and `tarballs/` ready to publish.
-4. Run `bun scripts/verify-release.mjs dist/npm` and inspect the staged contents with `bun pm pack --cwd dist/npm/serve-rs --dry-run`.
-5. Authenticate with npm, then publish each native tarball using `npm publish ./dist/tarballs/serve-rs-<platform>-<version>.tgz --access public`. Publish the main tarball last with `npm publish ./dist/tarballs/serve-rs-<version>.tgz --access public`. The tarballs preserve executable permissions through the artifact download.
-6. Verify the release with `bunx serve-rs --version` and `bunx serve-rs example.html`.
+After the packages exist, you can configure an npm trusted publisher on each package for this repository and the workflow filename `release.yml`, with direct `npm publish` allowed. The workflow supports OIDC and grants `id-token: write`, so `NPM_TOKEN` can then be removed. See [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) for setup and authentication requirements.
 
-Publish the staged packages, which omit development scripts. The root package has a prepublish check that requires all six staged native packages.
+### Release from GitHub Actions
 
-See the [npm package manifest documentation](https://docs.npmjs.com/cli/configuring-npm/package-json/) for platform selection and optional dependencies.
+1. Keep the version in `Cargo.toml`, `Cargo.lock`, `package.json`, and all optional dependency versions in sync. Commit and push the release changes.
+2. Open [Release packages](https://github.com/skorotkiewicz/serve-rs/actions/workflows/release.yml), select the release commit's branch or tag, and choose **Run workflow**. Leave **Publish to npm and create a GitHub release** checked.
+3. The workflow tests and builds all six platforms, verifies the complete bundle, publishes the native npm packages before the main package, and creates a GitHub release with the native archives and npm tarballs attached. A manual run creates `v<version>` at its selected commit if that tag does not exist.
+4. Verify with `bunx serve-rs --version` and `bunx serve-rs example.html`.
+
+Pushing a matching version tag also starts the complete release automatically:
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The tag must match the package version. Existing tags must point to the selected commit. Versions with a prerelease suffix, such as `0.2.0-beta.1`, publish under npm's `next` tag and become GitHub prereleases. Stable versions publish under `latest`.
+
+To build without publishing, run the workflow manually and uncheck the publish option. Every successful build keeps a combined `npm-packages` artifact with `npm/`, `native/`, and `tarballs/` directories. GitHub releases provide `serve-rs-<platform>.tar.gz` archives containing the executable in `bin/` and the license.
+
+If publishing fails partway through, rerun the failed jobs to reuse the original archives. Already published packages are skipped only when their registry integrity matches the archive. Different contents for the same version stop the release; bump the version if you need to rebuild a published package.
+
+`bun run prepublishOnly` remains available for verifying a downloaded complete bundle in `dist/npm/`. It intentionally rejects a bundle produced only by a local `bun run package`. The workflow performs this check before publishing.

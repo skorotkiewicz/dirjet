@@ -260,7 +260,6 @@
   .platforms > span { display: flex; flex-direction: column; gap: 3px; padding: var(--space-3); text-align: center; font-size: 11px; font-weight: 500; }
   .platforms > span + span { border-inline-start: 1px solid var(--color-border); }
   .platforms small { font: 9px var(--font-command); color: var(--color-text-tertiary); font-weight: 400; }
-  .maintainer-details { border-block-start: 1px solid var(--color-border); margin-block-start: var(--space-5); }
   .back-to-top { display: inline-flex; align-items: center; gap: var(--space-2); margin-block-start: var(--space-8); min-height: 40px; font-size: 11px; color: var(--color-accent); }
   .back-to-top .icon { width: 14px; height: 14px; transform: rotate(-90deg); }
   .back-to-top:hover { text-decoration: underline; text-underline-offset: 4px; }

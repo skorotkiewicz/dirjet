@@ -1,13 +1,69 @@
 name: Release packages
 
 on:
+  push:
+    tags: ['v*']
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish to npm and create a GitHub release
+        type: boolean
+        default: true
+
+concurrency:
+  group: release-packages
+  cancel-in-progress: false
 
 permissions:
   contents: read
 
 jobs:
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+      - name: Validate release version
+        id: version
+        env:
+          EXPECTED_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: |
+          bun --eval '
+            const manifest = await Bun.file("package.json").json();
+            const cargo = Bun.TOML.parse(await Bun.file("Cargo.toml").text());
+            const lock = Bun.TOML.parse(await Bun.file("Cargo.lock").text());
+            const version = manifest.version;
+            if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.test(version)) {
+              throw new Error("Expected a release version such as 0.1.0 or 0.2.0-beta.1");
+            }
+            if (cargo.package.version !== version || lock.package.find(p => p.name === manifest.name)?.version !== version ||
+                Object.values(manifest.optionalDependencies).some(v => v !== version)) {
+              throw new Error("Cargo, npm, and optional dependency versions must match");
+            }
+            const tag = "v" + version;
+            if (process.env.EXPECTED_TAG && process.env.EXPECTED_TAG !== tag) {
+              throw new Error("The Git tag must match the package version: " + tag);
+            }
+            console.log("version=" + version + "\ntag=" + tag + "\nprerelease=" + version.includes("-"));
+          ' >> "$GITHUB_OUTPUT"
+      - name: Check existing tag points to this commit
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
+            if [ "$(git rev-parse "$RELEASE_TAG^{commit}")" != "$(git rev-parse HEAD)" ]; then
+              echo "Tag $RELEASE_TAG belongs to a different commit. Select that tag or bump the version."
+              exit 1
+            fi
+          fi
   build:
+    needs: version
     env:
       CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER: musl-gcc
       CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: musl-gcc
@@ -59,21 +115,26 @@ jobs:
         run: ./target/${{ matrix.target }}/release/${{ matrix.binary }} --version
       - name: Stage npm packages
         run: bun scripts/package.mjs --platform ${{ matrix.platform }} --binary target/${{ matrix.target }}/release/${{ matrix.binary }}
+      - name: Archive native executable
+        shell: bash
+        run: |
+          mkdir -p dist/native
+          tar -czf "dist/native/serve-rs-${{ matrix.platform }}.tar.gz" -C "dist/npm/serve-rs-${{ matrix.platform }}" bin LICENSE
       - uses: actions/upload-artifact@v4
         with:
-          name: npm-${{ matrix.platform }}
-          path: dist/npm/
+          name: staged-${{ matrix.platform }}
+          path: dist/
           if-no-files-found: error
   assemble:
-    needs: build
+    needs: [version, build]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - uses: actions/download-artifact@v4
         with:
-          pattern: npm-*
-          path: dist/npm/
+          pattern: staged-*
+          path: dist/
           merge-multiple: true
       - name: Check complete release
         run: bun scripts/verify-release.mjs dist/npm
@@ -91,3 +152,49 @@ jobs:
           name: npm-packages
           path: dist/
           if-no-files-found: error
+  publish:
+    needs: [version, assemble]
+    if: github.event_name == 'push' || inputs.publish
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Install npm with trusted publishing support
+        run: npm install --global npm@11
+      - uses: actions/download-artifact@v4
+        with:
+          name: npm-packages
+          path: dist/
+      - name: Verify complete release
+        run: bun run prepublishOnly
+      - name: Publish native packages, then serve-rs
+        run: bun run release:publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.version.outputs.tag }}
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+          PRERELEASE: ${{ needs.version.outputs.prerelease }}
+        run: |
+          if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" dist/native/*.tar.gz dist/tarballs/*.tgz --clobber
+            gh release edit "$RELEASE_TAG" --draft=false
+          else
+            args=(--target "$GITHUB_SHA" --title "serve-rs $RELEASE_VERSION" --generate-notes)
+            if [ "$PRERELEASE" = true ]; then
+              args+=(--prerelease --latest=false)
+            fi
+            gh release create "$RELEASE_TAG" "${args[@]}" dist/native/*.tar.gz dist/tarballs/*.tgz
+          fi

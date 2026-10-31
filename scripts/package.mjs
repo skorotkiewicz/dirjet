@@ -37,6 +37,8 @@ await writeFile(join(nativeDir, "package.json"), JSON.stringify({
   version: manifest.version,
   description: `Native ${values.platform} binary for serve-rs`,
   license: manifest.license,
+  repository: manifest.repository,
+  bugs: manifest.bugs,
   os: [platform.os],
   cpu: [platform.cpu],
   files: ["bin", "LICENSE"],

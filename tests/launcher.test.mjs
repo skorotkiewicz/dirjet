@@ -144,6 +144,8 @@ test("packed manifests contain the CLI and matching platform dependency", async 
   const manifest = JSON.parse(await readFile(join(staging, "serve-rs/package.json"), "utf8"));
   expect(manifest.scripts).toBeUndefined();
   expect(manifest.optionalDependencies[`serve-rs-${platform}`]).toBe(manifest.version);
+  const native = JSON.parse(await readFile(join(staging, `serve-rs-${platform}/package.json`), "utf8"));
+  expect(native.repository).toEqual(manifest.repository);
   const missing = Bun.spawn([process.execPath, join(staging, "serve-rs/bin/serve-rs.cjs"), "--version"], {
     stdout: "pipe", stderr: "pipe",
   });

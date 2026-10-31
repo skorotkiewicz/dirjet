@@ -13,11 +13,15 @@ let launcher;
 let site;
 
 async function command(args, options = {}) {
-  const child = Bun.spawn(args, { cwd: root, stdout: "pipe", stderr: "pipe", ...options });
+  const started = performance.now();
+  const child = Bun.spawn(args, { cwd: root, stdout: "pipe", stderr: "pipe", timeout: 100_000, ...options });
   const [code, stdout, stderr] = await Promise.all([
     child.exited, new Response(child.stdout).text(), new Response(child.stderr).text(),
   ]);
-  if (code !== 0) throw new Error(`${args.join(" ")} failed (${code}):\n${stdout}\n${stderr}`);
+  if (code !== 0) {
+    const elapsed = Math.round(performance.now() - started);
+    throw new Error(`${args.join(" ")} failed (${code}) after ${elapsed}ms:\n${stdout}\n${stderr}`);
+  }
   return stdout;
 }
 
@@ -98,16 +102,28 @@ async function withServer(args, callback) {
   }
 }
 
-test("staged npm launcher supports Bun and Node and forwards CLI exit codes", async () => {
-  expect((await command([process.execPath, launcher, "--version"])).trim()).toBe(`serve-rs ${manifest.version}`);
-  if (Bun.which("node")) {
-    expect((await command(["node", launcher, "--version"])).trim()).toBe(`serve-rs ${manifest.version}`);
-  }
+// Each runtime gets its own budget. Windows CI can take more than five seconds
+// to start Node for the first time. Command deadlines expire before test deadlines
+// so failures include the command output instead of becoming unhandled rejections.
+const cliTestTimeout = 30_000;
+const cliCommandTimeout = 20_000;
+
+test("staged npm launcher runs with Bun", async () => {
+  expect((await command([process.execPath, launcher, "--version"], { timeout: cliCommandTimeout })).trim())
+    .toBe(`serve-rs ${manifest.version}`);
+}, cliTestTimeout);
+
+test.skipIf(!Bun.which("node"))("staged npm launcher runs with Node", async () => {
+  expect((await command(["node", launcher, "--version"], { timeout: cliCommandTimeout })).trim())
+    .toBe(`serve-rs ${manifest.version}`);
+}, cliTestTimeout);
+
+test("staged npm launcher forwards CLI exit codes", async () => {
   const child = Bun.spawn([process.execPath, launcher, "--port", "invalid"], {
-    stdout: "ignore", stderr: "ignore",
+    stdout: "ignore", stderr: "ignore", timeout: cliCommandTimeout,
   });
   expect(await child.exited).toBe(2);
-});
+}, cliTestTimeout);
 
 test("single-file npm command serves HTML and relative assets over HTTP", async () => {
   await withServer([join(site, "example.html")], async (url) => {

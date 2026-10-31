@@ -25,6 +25,11 @@ check:
 test: fmt
     cargo test --all-targets --all-features
 
+# Update npm, Cargo, the lockfile, and the documentation badge. `just bump 0.1.3`
+[positional-arguments]
+bump version:
+    bun scripts/bump-version.mjs "$1"
+
 install-hook:
     @printf '#!/bin/sh\nset -e\njust check\n' > .git/hooks/pre-commit
     @chmod +x .git/hooks/pre-commit

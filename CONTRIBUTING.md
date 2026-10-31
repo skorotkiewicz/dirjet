@@ -1,52 +1,6 @@
-# dirjet
+# Contributing to dirjet
 
-A Rust static file server for directories and individual files, distributed through npm.
-
-After the first release is published:
-
-```sh
-bunx dirjet dir/
-bunx dirjet example.html
-bunx dirjet
-```
-
-The server listens at `http://127.0.0.1:3000` by default. The last command serves the current directory. Stop it with Ctrl+C.
-
-The npm launcher runs on Node.js 18+ or Bun. If Node.js is not installed, use `bunx --bun dirjet dir/` to run the launcher with Bun. No Rust toolchain is required for npm users. `npx dirjet dir/` works too.
-
-## Serving files
-
-Directories use `index.html` when present, otherwise they show a directory listing. Directory URLs redirect to a trailing slash so relative assets resolve correctly.
-
-When you pass a file, `/` and its filename URL both serve that file. Its parent directory becomes the document root so relative CSS, JavaScript, and images work, including assets in subdirectories. Other non-hidden files in that parent directory are accessible by URL. Directory listings are disabled in this mode.
-
-The server streams files and supports MIME types, HEAD, byte ranges, and Last-Modified conditional requests. Responses use `Cache-Control: no-cache` so browsers revalidate local edits. Dotfiles, parent traversal, and symlinks resolving outside the document root are rejected.
-
-This is a static server. Build TypeScript, JSX, and other source assets before serving them. It does not transpile code or provide live reload, TLS, or full compatibility with `serve` configuration files.
-
-## Options
-
-```sh
-dirjet [OPTIONS] [PATH]
-```
-
-| Option | Default | Behavior |
-| --- | --- | --- |
-| `-p, --port PORT` | `3000` | TCP port. Use `0` to choose an available port. |
-| `-l, --listen PORT` | `3000` | Alias for `--port`. |
-| `--host IP` | `127.0.0.1` | Bind address. Use `0.0.0.0` to allow network access. |
-| `-s, --single` | Off | Serve the entry file for missing extensionless routes. |
-| `--no-listing` | Off | Return 404 for directories without `index.html`. |
-| `-h, --help` | | Show help. |
-| `-V, --version` | | Show version. |
-
-For a single-page application:
-
-```sh
-bunx dirjet -s dist/ -l 8080
-```
-
-Missing routes such as `/users/42` return `index.html`. Missing assets such as `/missing.js` still return 404. With a file argument, `--single` uses that file as the fallback. A missing entry file causes startup to fail.
+For installation, usage, and CLI options, see [README.md](README.md).
 
 ## Develop
 

@@ -1,22 +1,23 @@
-# 🚀 dirjet
+# dirjet
 
-**A lightning-fast, zero-config static file server for directories and individual files.**
+A Rust static file server for directories and individual files.
 
-`dirjet` gives you a production-grade local server instantly. No complex setups, no heavy dependencies, and no compilation required. Just point it at your files and go.
+Run it with `npx` or `bunx`. No configuration file or Rust toolchain required.
 
-## ✨ Why use dirjet?
+[Documentation](https://github.com/skorotkiewicz/dirjet/tree/main/docs) · [Contributing](https://github.com/skorotkiewicz/dirjet/blob/main/CONTRIBUTING.md)
 
-*   **Zero Setup:** Run it immediately via `npx` or `bunx`. No Rust or Cargo installation required.
-*   **Blazing Fast:** Under the hood, it runs a highly optimized native binary that is automatically downloaded and cached for your specific OS.
-*   **Smart Routing:** Automatically serves `index.html`, handles directory listings, and ensures relative assets (CSS, JS, images) resolve correctly.
-*   **Modern Web Standards:** Supports file streaming, correct MIME types, byte ranges (great for video/audio), and conditional caching.
-*   **Secure by Default:** Automatically blocks hidden dotfiles, parent directory traversal (`../`), and external symlinks.
+## Why use dirjet?
+
+- Runs a native binary, downloaded and cached for your OS and CPU.
+- Serves `index.html` files, directory listings, or a single file with its relative assets.
+- Supports file streaming, MIME types, HEAD requests, byte ranges, and conditional caching.
+- Blocks dotfiles, parent directory traversal, and symlinks that resolve outside the document root.
 
 ---
 
-## 🏃 Quick Start
+## Quick start
 
-Requires **Node.js (18+)** or **Bun**.
+Requires Node.js 18+ or Bun.
 
 ```bash
 # Serve a specific directory
@@ -29,25 +30,29 @@ npx dirjet index.html
 npx dirjet
 ```
 
-By default, the server starts at **`http://127.0.0.1:3000`**. Simply press `Ctrl+C` in your terminal to stop it.
+The server listens at `http://127.0.0.1:3000` by default. Stop it with Ctrl+C.
 
-*(Prefer Bun? `bunx dirjet ./my-website` works perfectly too!)*
+With Bun, use `bunx dirjet ./my-website`. If Node.js is not installed, use `bunx --bun dirjet ./my-website` to run the launcher with Bun.
 
 ---
 
-## 📂 How it Serves Files
+## How it serves files
 
 ### Directories
-When serving a folder, `dirjet` looks for an `index.html` file. If it finds one, it serves it. If not, it displays a clean, easy-to-navigate directory listing. It also automatically handles trailing slashes in URLs so your relative CSS and JavaScript files load without breaking.
 
-### Single Files
-If you pass a specific file (e.g., `npx dirjet presentation.html`), it serves that file at the root (`/`) and at its exact filename. Smartly, it sets the *parent* folder as the document root. This means your relative stylesheets, scripts, and images will work perfectly, even if they are in subdirectories! *(Note: Directory listings are disabled when serving a single file).*
+Directories serve `index.html` when present, otherwise they show a directory listing. Directory URLs redirect to a trailing slash so relative assets resolve correctly.
 
-> **Note:** `dirjet` is a pure static server. It does not transpile TypeScript/JSX or provide live-reload. Build your frontend assets before serving them!
+### Single files
+
+Passing a file, such as `npx dirjet presentation.html`, serves it at `/` and `/presentation.html`. Its parent directory becomes the document root so relative stylesheets, scripts, and images work, including assets in subdirectories.
+
+Other non-hidden files in that parent directory are also accessible by URL. Directory listings are disabled in single-file mode.
+
+`dirjet` serves static files. Build TypeScript, JSX, and other frontend source assets before serving them. It does not transpile code, provide live reload, or terminate TLS.
 
 ---
 
-## ⚙️ Configuration Options
+## Options
 
 ```bash
 dirjet [OPTIONS] [PATH]
@@ -56,28 +61,29 @@ dirjet [OPTIONS] [PATH]
 | Option | Default | What it does |
 | :--- | :--- | :--- |
 | `-p`, `--port <PORT>` | `3000` | Change the server port. Use `0` to automatically pick an available port. |
+| `-l`, `--listen <PORT>` | `3000` | Alias for `--port`. |
 | `--host <IP>` | `127.0.0.1` | Bind to a specific IP address. Use `0.0.0.0` to make the server accessible to other devices on your local network. |
-| `-s`, `--single` | Off | **Single-Page App (SPA) mode.** Routes all missing extensionless paths back to your entry file (e.g., `index.html`). |
+| `-s`, `--single` | Off | Single-page app mode. Serve the entry file for missing extensionless routes. |
 | `--no-listing` | Off | Returns a `404 Not Found` for directories that don't have an `index.html` file, instead of showing a directory list. |
 | `-h`, `--help` | | Show the help menu. |
 | `-V`, `--version` | | Show the current version. |
 
-### 🧩 Example: Serving a Single-Page App (React, Vue, Svelte, etc.)
+### Serve a single-page app
 
 ```bash
 npx dirjet -s ./dist -p 8080
 ```
-In this mode, if a user visits `/users/42`, `dirjet` will serve your `index.html` so your frontend router can take over. (Missing actual assets, like `/missing.js`, will still correctly return a `404`).
+
+Missing routes such as `/users/42` return `index.html` so your frontend router can handle them. Missing assets such as `/missing.js` still return 404. When serving a single file, `--single` uses that file as the fallback.
 
 ---
 
-## 🪄 Under the Hood: How the Magic Works
+## Binary downloads and caching
 
-You might wonder how it's so fast without requiring you to install Rust. 
+On first run, the JavaScript launcher downloads the native binary for your OS and CPU from the matching GitHub release. It verifies the binary's SHA-256 checksum before running it and saves it in your OS cache directory. The first run needs access to GitHub Releases.
 
-When you run `npx dirjet` for the very first time, a tiny, secure launcher detects your Operating System and CPU architecture. It then downloads the exact native binary you need from the official GitHub release, verifies its integrity, and caches it on your machine. 
+Later runs verify and reuse the cached binary. Each version has a separate cache entry. Interrupted or invalid downloads are discarded. No postinstall scripts run.
 
-The next time you run `dirjet`, it uses that cached binary and starts up instantly. Upgrading to a new version simply caches the new binary.
+Prebuilt binaries support Linux, macOS, and Windows on x64 and ARM64.
 
-**Environment Variables:**
-*   `DIRJET_CACHE_DIR`: Set this to choose a custom, writable folder for storing the downloaded binaries instead of the default OS cache directory.
+Set `DIRJET_CACHE_DIR` to use a custom, writable cache directory.

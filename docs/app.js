@@ -254,6 +254,10 @@
       if (link.hash === "#" + current.id) link.setAttribute("aria-current", "location");
       else link.removeAttribute("aria-current");
     }
+    const reference = ["cli-reference", "http-behavior"].includes(current.id);
+    document.querySelectorAll('.header-nav a[href^="#"]').forEach((link) => {
+      link.classList.toggle("selected", link.hash === (reference ? "#cli-reference" : "#quickstart"));
+    });
     ticking = false;
   }
   window.addEventListener("scroll", () => {
